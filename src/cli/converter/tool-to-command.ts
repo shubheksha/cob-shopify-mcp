@@ -11,6 +11,7 @@ import type { ZodType } from "zod";
 import type { ToolDefinition } from "../../core/engine/types.js";
 import { formatCostSummary, formatError } from "../output/errors.js";
 import { formatOutput } from "../output/formatter.js";
+import { confirmMutation, isMutation } from "../safety/mutation-guard.js";
 import { globalFlags } from "./global-flags.js";
 import { zodToCittyArgs, zodToJsonSchema } from "./zod-to-citty.js";
 
@@ -91,18 +92,18 @@ export function toolToCommand(tool: ToolDefinition, actionName: string) {
 				// --describe: show schema, don't execute
 				if (args.describe) {
 					const schema = zodToJsonSchema(tool.input);
-					const output = JSON.stringify(
-						{
-							name: tool.name,
-							domain: tool.domain,
-							tier: tool.tier,
-							description: tool.description,
-							scopes: tool.scopes,
-							input: schema,
-						},
-						null,
-						2,
-					);
+					const describe: Record<string, unknown> = {
+						name: tool.name,
+						domain: tool.domain,
+						tier: tool.tier,
+						description: tool.description,
+						scopes: tool.scopes,
+						input: schema,
+					};
+					if (tool.outputFields && tool.outputFields.length > 0) {
+						describe.outputFields = tool.outputFields;
+					}
+					const output = JSON.stringify(describe, null, 2);
 					process.stdout.write(`${output}\n`);
 					return;
 				}
@@ -120,11 +121,14 @@ export function toolToCommand(tool: ToolDefinition, actionName: string) {
 
 				// --dry-run: validate and show intent, don't execute
 				if (args["dry-run"]) {
+					const mutation = isMutation(tool);
 					const output = JSON.stringify(
 						{
 							dryRun: true,
 							tool: tool.name,
 							domain: tool.domain,
+							mutation,
+							scopes: tool.scopes,
 							input: coercedInput,
 						},
 						null,
@@ -132,6 +136,15 @@ export function toolToCommand(tool: ToolDefinition, actionName: string) {
 					);
 					process.stdout.write(`${output}\n`);
 					return;
+				}
+
+				// Confirm mutations before executing (unless --yes or non-TTY)
+				if (isMutation(tool)) {
+					const confirmed = await confirmMutation(tool, { yes: args.yes });
+					if (!confirmed) {
+						process.stderr.write("Aborted.\n");
+						return;
+					}
 				}
 
 				// Boot execution context (lazy — only when actually executing)

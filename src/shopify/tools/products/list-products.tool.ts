@@ -22,7 +22,7 @@ export const listProducts = defineTool({
 		"pageInfo",
 	],
 	input: {
-		limit: z.number().min(1).max(250).default(10),
+		limit: z.coerce.number().min(1).max(250).default(10),
 		status: z.enum(["ACTIVE", "DRAFT", "ARCHIVED"]).optional(),
 		vendor: z.string().optional(),
 		product_type: z.string().optional(),

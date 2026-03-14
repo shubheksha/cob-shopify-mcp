@@ -13,7 +13,7 @@ export const adjustInventory = defineTool({
 	input: {
 		inventory_item_id: z.string().describe("Shopify GID of the inventory item"),
 		location_id: z.string().describe("Shopify GID of the location"),
-		delta: z.number().describe("Quantity change — positive to add, negative to subtract"),
+		delta: z.coerce.number().describe("Quantity change — positive to add, negative to subtract"),
 		reason: z.string().optional().describe("Reason for adjustment (e.g. 'correction', 'received')"),
 	},
 	handler: async (

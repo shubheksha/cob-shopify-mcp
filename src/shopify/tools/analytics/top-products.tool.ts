@@ -21,7 +21,7 @@ export default defineTool({
 		start_date: z.string().describe("ISO 8601 date, e.g. 2026-01-01"),
 		end_date: z.string().describe("ISO 8601 date, e.g. 2026-01-31"),
 		sort_by: z.enum(["revenue", "quantity"]).default("revenue").describe("Sort by revenue or quantity"),
-		limit: z.number().min(1).max(50).default(10).describe("Number of products to return"),
+		limit: z.coerce.number().min(1).max(50).default(10).describe("Number of products to return"),
 	},
 	handler: async (
 		input: { start_date: string; end_date: string; sort_by: string; limit: number },

@@ -11,7 +11,7 @@ export const searchCustomers = defineTool({
 	scopes: ["read_customers"],
 	input: {
 		query: z.string(),
-		limit: z.number().min(1).max(250).default(10),
+		limit: z.coerce.number().min(1).max(250).default(10),
 		cursor: z.string().optional(),
 	},
 	handler: async (input: { query: string; limit: number; cursor?: string }, ctx: ExecutionContext) => {

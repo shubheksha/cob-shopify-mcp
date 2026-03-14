@@ -11,7 +11,7 @@ export const getInventoryBySku = defineTool({
 	scopes: ["read_inventory"],
 	input: {
 		sku: z.string().describe("SKU string to search for"),
-		limit: z.number().min(1).max(50).default(10),
+		limit: z.coerce.number().min(1).max(50).default(10),
 	},
 	handler: async (input: { sku: string; limit: number }, ctx: ExecutionContext) => {
 		const result = await ctx.shopify.query(query, {

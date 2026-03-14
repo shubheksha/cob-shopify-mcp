@@ -16,7 +16,7 @@ export const lowStockReport = defineTool({
 			.min(0)
 			.default(10)
 			.describe("Stock threshold — items with available quantity below this are included"),
-		limit: z.number().min(1).max(100).default(25).describe("Maximum number of low-stock items to return"),
+		limit: z.coerce.number().min(1).max(100).default(25).describe("Maximum number of low-stock items to return"),
 	},
 	handler: async (input: { threshold: number; limit: number }, ctx: ExecutionContext) => {
 		const lowStockItems: Array<{

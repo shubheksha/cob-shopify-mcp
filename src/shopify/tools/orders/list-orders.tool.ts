@@ -22,7 +22,7 @@ export const listOrders = defineTool({
 		"pageInfo",
 	],
 	input: {
-		limit: z.number().min(1).max(50).default(10),
+		limit: z.coerce.number().min(1).max(50).default(10),
 		status: z.string().optional(),
 		financial_status: z.string().optional(),
 		fulfillment_status: z.string().optional(),

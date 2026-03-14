@@ -12,7 +12,7 @@ export const setInventoryLevel = defineTool({
 	input: {
 		inventory_item_id: z.string().describe("Shopify GID of the inventory item"),
 		location_id: z.string().describe("Shopify GID of the location"),
-		quantity: z.number().min(0).describe("Exact quantity to set"),
+		quantity: z.coerce.number().min(0).describe("Exact quantity to set"),
 		reason: z.string().optional().describe("Reason for setting quantity (e.g. 'correction', 'cycle_count_available')"),
 	},
 	handler: async (

@@ -12,7 +12,7 @@ export const getLocationInventory = defineTool({
 	scopes: ["read_inventory", "read_locations"],
 	input: {
 		location_id: z.string().describe("Shopify GID of the location"),
-		limit: z.number().min(1).max(250).default(25),
+		limit: z.coerce.number().min(1).max(250).default(25),
 		cursor: z.string().optional().describe("Pagination cursor"),
 	},
 	handler: async (input: { location_id: string; limit: number; cursor?: string }, ctx: ExecutionContext) => {

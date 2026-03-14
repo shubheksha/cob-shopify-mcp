@@ -12,7 +12,7 @@ export const getCustomerOrders = defineTool({
 	scopes: ["read_customers"],
 	input: {
 		customer_id: z.string(),
-		limit: z.number().min(1).max(250).default(10),
+		limit: z.coerce.number().min(1).max(250).default(10),
 		cursor: z.string().optional(),
 	},
 	handler: async (input: { customer_id: string; limit: number; cursor?: string }, ctx: ExecutionContext) => {

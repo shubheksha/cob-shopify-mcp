@@ -13,7 +13,7 @@ export const createDraftOrder = defineTool({
 		line_items: z.array(
 			z.object({
 				variant_id: z.string(),
-				quantity: z.number().min(1),
+				quantity: z.coerce.number().min(1),
 			}),
 		),
 		customer_id: z.string().optional(),

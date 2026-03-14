@@ -12,7 +12,7 @@ export const listProductVariants = defineTool({
 	scopes: ["read_products"],
 	input: {
 		product_id: z.string(),
-		limit: z.number().min(1).max(100).default(25),
+		limit: z.coerce.number().min(1).max(100).default(25),
 		cursor: z.string().optional(),
 	},
 	handler: async (input: { product_id: string; limit: number; cursor?: string }, ctx: ExecutionContext) => {

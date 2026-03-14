@@ -11,7 +11,7 @@ export const listInventoryLevels = defineTool({
 		"List inventory levels across all locations. Returns location name and available/committed/on_hand quantities. Supports cursor pagination.",
 	scopes: ["read_inventory", "read_locations"],
 	input: {
-		limit: z.number().min(1).max(250).default(25),
+		limit: z.coerce.number().min(1).max(250).default(25),
 		cursor: z.string().optional().describe("Pagination cursor"),
 	},
 	handler: async (input: { limit: number; cursor?: string }, ctx: ExecutionContext) => {

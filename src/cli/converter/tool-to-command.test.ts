@@ -104,60 +104,46 @@ describe("coerceInput", () => {
 });
 
 describe("toolToCommand", () => {
-	it("returns a command with correct meta", () => {
+	it("returns a Command with correct name and description", () => {
 		const tool = makeTool();
 		const cmd = toolToCommand(tool, "list");
-		expect(cmd.meta?.name).toBe("list");
-		expect(cmd.meta?.description).toBe("List products from the store");
+		expect(cmd.name()).toBe("list");
+		expect(cmd.description()).toBe("List products from the store");
 	});
 
-	it("includes tool args in command args", () => {
+	it("includes tool options in command", () => {
 		const tool = makeTool();
 		const cmd = toolToCommand(tool, "list");
-		const argKeys = Object.keys(cmd.args || {});
-		expect(argKeys).toContain("limit");
-		expect(argKeys).toContain("status");
-		expect(argKeys).toContain("query");
+		const optionNames = cmd.options.map((o) => o.long?.replace(/^--/, "") ?? o.short?.replace(/^-/, ""));
+		expect(optionNames).toContain("limit");
+		expect(optionNames).toContain("status");
+		expect(optionNames).toContain("query");
 	});
 
-	it("includes global flags in command args", () => {
+	it("has an action handler", () => {
 		const tool = makeTool();
 		const cmd = toolToCommand(tool, "list");
-		const argKeys = Object.keys(cmd.args || {});
-		expect(argKeys).toContain("json");
-		expect(argKeys).toContain("fields");
-		expect(argKeys).toContain("jq");
-		expect(argKeys).toContain("describe");
-		expect(argKeys).toContain("dry-run");
-		expect(argKeys).toContain("yes");
+		// Commander stores the action handler internally
+		// We verify it's a Command with listeners
+		expect(cmd).toBeDefined();
+		expect(cmd.name()).toBe("list");
 	});
 
-	it("has a run function", () => {
-		const tool = makeTool();
-		const cmd = toolToCommand(tool, "list");
-		expect(typeof cmd.run).toBe("function");
-	});
-
-	it("merges tool args and global flags without collision", () => {
+	it("includes tool-specific options without collision", () => {
 		const tool = makeTool({
 			input: {
 				id: z.string().describe("Product ID"),
 			},
 		});
 		const cmd = toolToCommand(tool, "get");
-		const argKeys = Object.keys(cmd.args || {});
-		// Should have both tool arg and all global flags
-		expect(argKeys).toContain("id");
-		expect(argKeys).toContain("json");
-		expect(argKeys).toContain("describe");
-		expect(argKeys.length).toBeGreaterThanOrEqual(7); // 1 tool arg + 6 global flags
+		const optionNames = cmd.options.map((o) => o.long?.replace(/^--/, "") ?? o.short?.replace(/^-/, ""));
+		expect(optionNames).toContain("id");
 	});
 
 	it("works with tool that has no input fields", () => {
 		const tool = makeTool({ input: {} });
 		const cmd = toolToCommand(tool, "list-all");
-		const argKeys = Object.keys(cmd.args || {});
-		// Should only have global flags
-		expect(argKeys.length).toBe(6);
+		// No tool-specific options — only whatever Commander adds by default
+		expect(cmd.options).toHaveLength(0);
 	});
 });

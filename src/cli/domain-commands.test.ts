@@ -49,9 +49,10 @@ describe("buildDomainCommands", () => {
 
 		const commands = buildDomainCommands(tools);
 
-		expect(Object.keys(commands)).toHaveLength(2);
-		expect(commands.products).toBeDefined();
-		expect(commands.orders).toBeDefined();
+		expect(commands).toHaveLength(2);
+		const names = commands.map((c) => c.name());
+		expect(names).toContain("products");
+		expect(names).toContain("orders");
 	});
 
 	it("creates correct subcommands per domain", () => {
@@ -61,35 +62,39 @@ describe("buildDomainCommands", () => {
 		];
 
 		const commands = buildDomainCommands(tools);
-		const subCmds = commands.products.subCommands as Record<string, unknown>;
+		const productsCmd = commands.find((c) => c.name() === "products");
 
-		expect(subCmds).toBeDefined();
-		expect(Object.keys(subCmds)).toContain("list");
-		expect(Object.keys(subCmds)).toContain("get");
+		expect(productsCmd).toBeDefined();
+		const subCmdNames = productsCmd?.commands.map((c) => c.name());
+		expect(subCmdNames).toContain("list");
+		expect(subCmdNames).toContain("get");
 	});
 
 	it("applies domain description from domainDescriptions", () => {
 		const tools = [makeTool({ name: "list_products", domain: "products" })];
 
 		const commands = buildDomainCommands(tools);
+		const productsCmd = commands.find((c) => c.name() === "products");
 
-		expect(commands.products.meta?.description).toBe("Manage products, variants, collections");
+		expect(productsCmd?.description()).toBe("Manage products, variants, collections");
 	});
 
 	it("auto-generates description for custom domains", () => {
 		const tools = [makeTool({ name: "list_shipping_zones", domain: "shipping", tier: 3 })];
 
 		const commands = buildDomainCommands(tools);
+		const shippingCmd = commands.find((c) => c.name() === "shipping");
 
-		expect(commands.shipping.meta?.description).toBe("Tools for shipping");
+		expect(shippingCmd?.description()).toBe("Tools for shipping");
 	});
 
-	it("sets domain name as meta.name", () => {
+	it("sets domain name as command name", () => {
 		const tools = [makeTool({ name: "list_orders", domain: "orders" })];
 
 		const commands = buildDomainCommands(tools);
+		const ordersCmd = commands.find((c) => c.name() === "orders");
 
-		expect(commands.orders.meta?.name).toBe("orders");
+		expect(ordersCmd?.name()).toBe("orders");
 	});
 
 	it("derives action names correctly from tool names", () => {
@@ -99,15 +104,16 @@ describe("buildDomainCommands", () => {
 		];
 
 		const commands = buildDomainCommands(tools);
-		const subCmds = commands.products.subCommands as Record<string, unknown>;
+		const productsCmd = commands.find((c) => c.name() === "products");
+		const subCmdNames = productsCmd?.commands.map((c) => c.name());
 
-		expect(Object.keys(subCmds)).toContain("create");
-		expect(Object.keys(subCmds)).toContain("update-variant");
+		expect(subCmdNames).toContain("create");
+		expect(subCmdNames).toContain("update-variant");
 	});
 
-	it("returns empty record for empty tools array", () => {
+	it("returns empty array for empty tools array", () => {
 		const commands = buildDomainCommands([]);
-		expect(Object.keys(commands)).toHaveLength(0);
+		expect(commands).toHaveLength(0);
 	});
 
 	it("handles tools with multiple domains correctly", () => {
@@ -119,7 +125,8 @@ describe("buildDomainCommands", () => {
 		];
 
 		const commands = buildDomainCommands(tools);
+		const names = commands.map((c) => c.name()).sort();
 
-		expect(Object.keys(commands).sort()).toEqual(["customers", "inventory", "orders", "products"]);
+		expect(names).toEqual(["customers", "inventory", "orders", "products"]);
 	});
 });

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { defineCommand, runMain } from "citty";
+import { Command } from "commander";
 import { consola } from "consola";
 import { loadConfig } from "../core/config/loader.js";
 import { ToolRegistry } from "../core/registry/tool-registry.js";
@@ -37,35 +37,80 @@ async function loadEnabledTools() {
 }
 
 /**
- * Build the CLI main command with both static commands and dynamic domain commands.
+ * Build the Commander program with static commands and dynamic domain commands.
  */
-async function buildMain() {
-	let domainCommands: Record<string, ReturnType<typeof defineCommand>> = {};
+const program = new Command()
+	.name("cob-shopify-mcp")
+	.version(VERSION)
+	.description("cob-shopify-mcp — Shopify CLI & MCP Server")
+	.option("--json", "Output as JSON")
+	.option("--fields <fields>", "Select specific response fields (comma-separated, implies --json)")
+	.option("--jq <expr>", "Filter JSON output with jq expression (implies --json)")
+	.option("--schema", "Show command schema as JSON, don't execute")
+	.option("--dry-run", "Preview mutations without executing")
+	.option("-y, --yes", "Skip confirmation prompts");
 
-	try {
-		const enabledTools = await loadEnabledTools();
-		domainCommands = buildDomainCommands(enabledTools);
-	} catch {
-		// Config/tool loading may fail (e.g. no config file) — that's fine,
-		// static commands (start, connect, config, tools, stores) still work.
-	}
-
-	return defineCommand({
-		meta: {
-			name: "cob-shopify-mcp",
-			version: VERSION,
-			description: "cob-shopify-mcp — Shopify CLI & MCP Server",
-		},
-		subCommands: {
-			start: () => import("./commands/start.js").then((m) => m.default),
-			connect: () => import("./commands/connect.js").then((m) => m.default),
-			config: () => import("./commands/config/index.js").then((m) => m.default),
-			tools: () => import("./commands/tools/index.js").then((m) => m.default),
-			stores: () => import("./commands/stores/index.js").then((m) => m.default),
-			...domainCommands,
-		},
+// Static commands — delegate to existing citty handlers
+program
+	.command("start")
+	.description("Start the MCP server")
+	.allowUnknownOption()
+	.action(async () => {
+		const { runCommand } = await import("citty");
+		const mod = await import("./commands/start.js");
+		await runCommand(mod.default, { rawArgs: process.argv.slice(3) });
 	});
+
+program
+	.command("connect")
+	.description("Connect a Shopify store via OAuth")
+	.allowUnknownOption()
+	.action(async () => {
+		const { runCommand } = await import("citty");
+		const mod = await import("./commands/connect.js");
+		await runCommand(mod.default, { rawArgs: process.argv.slice(3) });
+	});
+
+program
+	.command("config")
+	.description("Manage configuration")
+	.allowUnknownOption()
+	.action(async () => {
+		const { runCommand } = await import("citty");
+		const mod = await import("./commands/config/index.js");
+		await runCommand(mod.default, { rawArgs: process.argv.slice(3) });
+	});
+
+program
+	.command("tools")
+	.description("List, inspect, and run tools")
+	.allowUnknownOption()
+	.action(async () => {
+		const { runCommand } = await import("citty");
+		const mod = await import("./commands/tools/index.js");
+		await runCommand(mod.default, { rawArgs: process.argv.slice(3) });
+	});
+
+program
+	.command("stores")
+	.description("Manage connected stores")
+	.allowUnknownOption()
+	.action(async () => {
+		const { runCommand } = await import("citty");
+		const mod = await import("./commands/stores/index.js");
+		await runCommand(mod.default, { rawArgs: process.argv.slice(3) });
+	});
+
+// Dynamic domain commands from enabled tools
+try {
+	const enabledTools = await loadEnabledTools();
+	const domainCommands = buildDomainCommands(enabledTools);
+	for (const domainCmd of domainCommands) {
+		program.addCommand(domainCmd);
+	}
+} catch {
+	// Config/tool loading may fail (e.g. no config file) — that's fine,
+	// static commands (start, connect, config, tools, stores) still work.
 }
 
-const main = await buildMain();
-runMain(main);
+program.parse();

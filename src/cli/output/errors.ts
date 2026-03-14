@@ -17,7 +17,7 @@ export interface CostSummaryInput {
  */
 export function formatCostSummary(stats: CostSummaryInput): string {
 	const budget = stats.budgetRemaining + stats.totalCostConsumed;
-	return `Cost: ${stats.totalCostConsumed} points | Budget: ${stats.budgetRemaining}/${budget} | Session: ${stats.totalCallsMade} calls`;
+	return `Cost: ${stats.totalCostConsumed} points | Budget: ${stats.budgetRemaining}/${budget} | Session: ${stats.totalCallsMade} calls, ${stats.totalCostConsumed} points total`;
 }
 
 /**

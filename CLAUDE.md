@@ -86,7 +86,7 @@ pnpm generate         # Generate build-time action name map
 
 ## CLI Architecture
 
-The CLI uses `cob-shopify-mcp <domain> <action> [flags]` pattern powered by Commander.
+The CLI uses `cob-shopify <domain> <action> [flags]` pattern powered by Commander.
 
 - `src/cli/converter/` — Core: `toolToCommand()`, `deriveActionName()`, `zodToCittyArgs()`, `coerceInput()`
 - `src/cli/output/` — Output: formatter (TTY/JSON), field-filter, jq-filter, table renderer
@@ -96,7 +96,7 @@ The CLI uses `cob-shopify-mcp <domain> <action> [flags]` pattern powered by Comm
 
 Global flags (`--json`, `--fields`, `--jq`, `--schema`, `--dry-run`, `--yes`) are defined on the root Commander program and accessed via `collectOptions()` in leaf command actions.
 
-Custom YAML tools auto-register as CLI commands under their declared domain (e.g., `domain: "orders"` → `cob-shopify-mcp orders <action>`).
+Custom YAML tools auto-register as CLI commands under their declared domain (e.g., `domain: "orders"` → `cob-shopify orders <action>`).
 
 ## Adding a Tool
 

@@ -723,7 +723,9 @@ tools:
 
 The **3-tier system** gives full control: Tier 1 (enabled by default), Tier 2 (disabled by default, opt-in via config), Tier 3 (custom YAML tools, enabled by default). Plus `tools.enable` / `tools.disable` for granular overrides.
 
-See the **[Custom Tools Guide](custom-tools/README.md)** for the full reference — YAML structure, variable naming rules, response mapping, scopes reference, error handling, and step-by-step examples. The `custom-tools/` directory also includes 5 ready-made example tools (draft order completion, fulfillment, tracking, cancellation).
+See the **[Custom Tools Guide](custom-tools/README.md)** for the full reference — YAML structure, variable naming rules, response mapping, scopes reference, error handling, and step-by-step examples.
+
+The package ships with **5 ready-to-use custom tools** in `custom-tools/` — draft order completion, fulfillment orders, create fulfillment with tracking, update tracking, and order cancellation. They're enabled by default in `.env.example` (`COB_SHOPIFY_CUSTOM_TOOLS=./custom-tools`). To disable them, remove or comment out that line.
 
 ### Managing Tools
 

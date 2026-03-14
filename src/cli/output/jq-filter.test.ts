@@ -67,4 +67,16 @@ describe("applyJqFilter", () => {
 			variants: [{ sku: "S-1" }, { sku: "S-2" }],
 		});
 	});
+
+	it("blocks __proto__ access", () => {
+		expect(applyJqFilter(data, ".__proto__")).toBeUndefined();
+	});
+
+	it("blocks constructor access", () => {
+		expect(applyJqFilter(data, ".constructor")).toBeUndefined();
+	});
+
+	it("blocks prototype access", () => {
+		expect(applyJqFilter(data, ".prototype")).toBeUndefined();
+	});
 });

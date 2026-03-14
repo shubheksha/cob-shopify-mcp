@@ -85,6 +85,18 @@ describe("filterFields", () => {
 		expect(result).toEqual({ product: { id: "1", title: "Widget" } });
 	});
 
+	it("blocks __proto__ field access", () => {
+		const data = { id: "1", title: "Shirt" };
+		const result = filterFields(data, ["__proto__", "id"]);
+		expect(result).toEqual({ id: "1" });
+	});
+
+	it("blocks constructor and prototype field access", () => {
+		const data = { id: "1" };
+		const result = filterFields(data, ["constructor", "prototype", "id"]);
+		expect(result).toEqual({ id: "1" });
+	});
+
 	it("unwraps single-key wrapper for order responses", () => {
 		const data = {
 			order: {

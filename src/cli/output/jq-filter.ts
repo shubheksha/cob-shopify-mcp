@@ -68,6 +68,9 @@ function parseExpression(expr: string): Segment[] {
 	return segments;
 }
 
+/** Property names that must never be accessed via user-supplied paths. */
+const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 function evaluate(data: unknown, segments: Segment[]): unknown {
 	if (segments.length === 0) {
 		return data;
@@ -77,6 +80,9 @@ function evaluate(data: unknown, segments: Segment[]): unknown {
 
 	switch (current.type) {
 		case "field": {
+			if (BLOCKED_KEYS.has(current.name)) {
+				return undefined;
+			}
 			if (data === null || data === undefined || typeof data !== "object") {
 				return undefined;
 			}

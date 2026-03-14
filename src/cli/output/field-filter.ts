@@ -41,8 +41,8 @@ export function filterFields(data: unknown, fields: string[]): unknown {
 		const inner = obj[keys[0]];
 		if (inner !== null && typeof inner === "object" && !Array.isArray(inner)) {
 			const innerObj = inner as Record<string, unknown>;
-			const hasFieldsInner = fields.some((f) => f in innerObj);
-			const hasFieldsOuter = fields.some((f) => f in obj);
+			const hasFieldsInner = fields.some((f) => !BLOCKED_KEYS.has(f) && Object.prototype.hasOwnProperty.call(innerObj, f));
+			const hasFieldsOuter = fields.some((f) => !BLOCKED_KEYS.has(f) && Object.prototype.hasOwnProperty.call(obj, f));
 			if (hasFieldsInner && !hasFieldsOuter) {
 				return pickFields(innerObj, fields);
 			}
@@ -53,6 +53,9 @@ export function filterFields(data: unknown, fields: string[]): unknown {
 	return pickFields(obj, fields);
 }
 
+/** Property names that must never be accessed via user-supplied field names. */
+const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 function pickFields(item: unknown, fields: string[]): Record<string, unknown> {
 	if (item === null || item === undefined || typeof item !== "object") {
 		return {};
@@ -60,7 +63,8 @@ function pickFields(item: unknown, fields: string[]): Record<string, unknown> {
 	const obj = item as Record<string, unknown>;
 	const result: Record<string, unknown> = {};
 	for (const field of fields) {
-		if (field in obj) {
+		if (BLOCKED_KEYS.has(field)) continue;
+		if (Object.prototype.hasOwnProperty.call(obj, field)) {
 			result[field] = obj[field];
 		}
 	}

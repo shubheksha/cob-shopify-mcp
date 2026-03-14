@@ -5,7 +5,7 @@ Production-grade MCP server **and** CLI tool for Shopify. Use it as an MCP serve
 ## Features
 
 - **49 built-in tools + 5 example custom tools** across 5 domains (Products, Orders, Customers, Inventory, Analytics)
-- **Standalone CLI** — manage your store from the terminal without MCP (`cob-shopify-mcp tools list`, `stores list`, etc.)
+- **Standalone CLI** — natural domain commands from the terminal without MCP (`cob-shopify-mcp products list --limit 5`, `orders get --id ...`, etc.)
 - **MCP server** — connect to Claude, Cursor, Windsurf, or any MCP-compatible AI agent
 - **4 MCP resources** (Shop info, Locations, Policies, Currencies)
 - **4 MCP prompts** (Health check, Sales report, Inventory risk, Support summary)
@@ -25,11 +25,12 @@ This project gives you **two ways** to interact with Shopify. Same tools, same e
 |---|---------|---------|
 | **What it is** | Direct terminal commands | Protocol for AI agents |
 | **Who it's for** | Developers, scripts, CI/CD | Claude, Cursor, Windsurf, custom agents |
-| **How to use** | `cob-shopify-mcp tools run list_products --params '{"limit":5}'` | AI calls tools via MCP protocol |
+| **How to use** | `cob-shopify-mcp products list --limit 5` | AI calls tools via MCP protocol |
 | **Install via** | `npm install -g cob-shopify-mcp` | Same npm install, then `claude mcp add` |
 | **Docker** | Not applicable | Yes — HTTP transport for remote/multi-agent |
 | **Custom YAML tools** | Auto-discovered | Auto-discovered |
-| **Output** | JSON to stdout | JSON via MCP response |
+| **Output** | Table (TTY), JSON when piped; `--json`, `--fields`, `--jq` | JSON via MCP response |
+| **Schema introspection** | `--schema` flag on any command | Built into MCP protocol |
 | **Context window** | Zero impact — no tool schemas loaded | All tool schemas injected into AI context |
 | **Best for** | Quick lookups, scripting, pipelines, CI/CD | Conversational AI, multi-step workflows |
 
@@ -37,7 +38,9 @@ This project gives you **two ways** to interact with Shopify. Same tools, same e
 
 ```bash
 # CLI — run directly from terminal
-cob-shopify-mcp tools run list_products --params '{"limit": 5}'
+cob-shopify-mcp products list --limit 5
+cob-shopify-mcp products list --limit 5 --fields id,title,status
+cob-shopify-mcp orders get --id gid://shopify/Order/123 --json
 
 # MCP — connect to Claude and let AI use the same tools
 claude mcp add cob-shopify-mcp -- cob-shopify-mcp start
@@ -464,23 +467,41 @@ rate_limit:
 ## CLI Commands
 
 ```bash
+# Natural commands — cob-shopify-mcp <domain> <action> [flags]
+cob-shopify-mcp products list --limit 5
+cob-shopify-mcp products list --limit 5 --fields id,title,status
+cob-shopify-mcp products get --id gid://shopify/Product/123
+cob-shopify-mcp products search --query "snowboard" --limit 10
+cob-shopify-mcp orders list --limit 10 --json
+cob-shopify-mcp orders get --id gid://shopify/Order/456 --fields id,name
+cob-shopify-mcp customers search --query "email:john@example.com"
+cob-shopify-mcp inventory low-stock-report --threshold 10
+cob-shopify-mcp analytics sales-summary --start_date 2025-01-01 --end_date 2025-12-31
+
+# Global flags (available on every command)
+--json              # Force JSON output (auto when piped)
+--fields <f1,f2>    # Select specific response fields
+--jq <expr>         # Filter JSON with jq expression
+--schema            # Show command schema, don't execute
+--dry-run           # Preview mutations without executing
+--yes               # Skip confirmation prompts
+
+# Schema introspection (for AI agents)
+cob-shopify-mcp products list --schema
+
+# Mutation safety
+cob-shopify-mcp products create --title "New Widget" --dry-run
+cob-shopify-mcp products delete --id gid://shopify/Product/123  # prompts for confirmation
+
+# Server commands
 cob-shopify-mcp start              # Start the MCP server
 cob-shopify-mcp start --transport http --port 8080
-cob-shopify-mcp start --read-only  # Disable all mutations
+cob-shopify-mcp connect --store my-store.myshopify.com
+cob-shopify-mcp config show
 
-cob-shopify-mcp connect --store my-store.myshopify.com  # OAuth flow
-
-cob-shopify-mcp config show        # Show resolved config (secrets masked)
-cob-shopify-mcp config validate    # Validate config
-cob-shopify-mcp config init        # Generate starter config file
-
-cob-shopify-mcp tools list         # List all tools with status
-cob-shopify-mcp tools list --domain products
-cob-shopify-mcp tools list --tier 1
-cob-shopify-mcp tools info list_products  # Show tool details
-
-cob-shopify-mcp stores list        # List connected stores
-cob-shopify-mcp stores remove my-store.myshopify.com
+# Legacy commands (deprecated, will be removed in v1.0)
+cob-shopify-mcp tools list
+cob-shopify-mcp tools info list_products
 ```
 
 ## Tools Reference
@@ -599,7 +620,7 @@ pnpm build          # Build with tsup
 flowchart TB
     subgraph ENTRY["Entry Points"]
         direction LR
-        CLI["CLI\nconnect · serve · tools"]
+        CLI["CLI\nproducts · orders · customers\ninventory · analytics"]
         STDIO["MCP Server\nstdio transport"]
         HTTP["HTTP Server\nStreamable HTTP"]
     end
@@ -708,7 +729,7 @@ src/
 │   ├── resources/      # 4 MCP resources
 │   └── prompts/        # 4 MCP prompts
 ├── server/             # Server bootstrap and registration bridges
-└── cli/                # CLI commands (citty + consola)
+└── cli/                # CLI commands (Commander + consola)
 ```
 
 ## How It Compares
@@ -769,7 +790,7 @@ COB_SHOPIFY_READ_ONLY=true                 # Disable ALL write operations
 | **Auth methods** | **3** (static, client-creds, OAuth) | 2 | 1 | 1 | 2 |
 | **HTTP Transport** | **Streamable HTTP** | No | No | No | No |
 | **Encrypted Storage** | **JSON + SQLite** | No | No | No | No |
-| **Unit Tests** | **397** | ~2 | minimal | 1 | ~2 |
+| **Unit Tests** | **561** | ~2 | minimal | 1 | ~2 |
 | **Docker** | **Multi-stage** | No | No | No | No |
 | **Rate Limiter** | **Yes** | No | No | No | No |
 | **Query Cache** | **Yes** | No | No | No | No |

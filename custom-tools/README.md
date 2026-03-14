@@ -384,3 +384,18 @@ tools:
 - **Tier 3** — Custom YAML tools, enabled by default
 
 ### Priority: `read_only` > `disable` > `enable` > tier defaults
+
+## Using Custom Tools via CLI
+
+Custom YAML tools automatically appear as CLI commands under their declared domain:
+
+```bash
+# If your tool has domain: "orders" and name: "complete_draft_order"
+cob-shopify-mcp orders complete-draft --id gid://shopify/DraftOrder/123
+
+# View the tool's schema
+cob-shopify-mcp orders complete-draft --schema
+
+# Dry-run before executing
+cob-shopify-mcp orders complete-draft --id gid://shopify/DraftOrder/123 --dry-run
+```

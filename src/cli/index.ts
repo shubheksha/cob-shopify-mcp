@@ -54,11 +54,31 @@ const program = new Command()
 program
 	.command("start")
 	.description("Start the MCP server")
-	.allowUnknownOption()
-	.action(async () => {
-		const { runCommand } = await import("citty");
-		const mod = await import("./commands/start.js");
-		await runCommand(mod.default, { rawArgs: process.argv.slice(3) });
+	.option("--transport <type>", "Transport type (stdio or http)")
+	.option("--port <port>", "HTTP port")
+	.option("--host <host>", "HTTP host to bind")
+	.option("--read-only", "Enable read-only mode")
+	.option("--log-level <level>", "Log level (debug, info, warn, error)")
+	.option("--config <path>", "Path to config file")
+	.action(async (opts) => {
+		const { bootstrap } = await import("../server/bootstrap.js");
+		const overrides: Record<string, unknown> = {};
+		if (opts.transport) overrides.transport = { type: opts.transport };
+		if (opts.port) {
+			overrides.transport = { ...(overrides.transport as Record<string, unknown>), port: Number.parseInt(opts.port, 10) };
+		}
+		if (opts.host) {
+			overrides.transport = { ...(overrides.transport as Record<string, unknown>), host: opts.host };
+		}
+		if (opts.readOnly) overrides.tools = { read_only: true };
+		if (opts.logLevel) overrides.observability = { log_level: opts.logLevel };
+		try {
+			await bootstrap(overrides);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			console.error(`Failed to start server: ${message}`);
+			process.exit(1);
+		}
 	});
 
 program

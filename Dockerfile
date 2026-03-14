@@ -22,9 +22,10 @@ COPY package.json pnpm-lock.yaml ./
 # Install all dependencies (including devDeps needed for tsup + tsc)
 RUN pnpm install --frozen-lockfile
 
-# Copy source tree
+# Copy source tree and build scripts
 COPY tsconfig.json tsup.config.ts ./
 COPY src ./src
+COPY scripts ./scripts
 
 # Compile
 RUN pnpm build
@@ -69,5 +70,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 # Default: start in HTTP mode so the container is reachable.
 # Override with `docker run ... cob-shopify-mcp start --transport stdio`
 # for stdio / Claude Desktop use-cases.
+# Default: start in HTTP mode so the container is reachable.
+# Override with --transport stdio for Claude Desktop use-cases.
 ENTRYPOINT ["node", "dist/cli/index.js"]
 CMD ["start", "--transport", "http", "--host", "0.0.0.0", "--port", "3000"]

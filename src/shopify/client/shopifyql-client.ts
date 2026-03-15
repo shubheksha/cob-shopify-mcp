@@ -12,20 +12,24 @@ export interface ShopifyQLResult {
 	columns: ShopifyQLColumn[];
 }
 
-function coerceValue(value: string | null, dataType: string): string | number | null {
+function coerceValue(value: string | number | null, dataType: string): string | number | null {
 	if (value === null || value === undefined) {
 		return null;
+	}
+	// Value may already be a number (Shopify returns MONEY as number, INTEGER as string)
+	if (typeof value === "number") {
+		return value;
 	}
 	const upperType = dataType.toUpperCase();
 	if (upperType === "MONEY" || upperType === "FLOAT" || upperType === "PERCENT") {
 		const parsed = parseFloat(value);
 		return Number.isNaN(parsed) ? null : parsed;
 	}
-	if (upperType === "INT") {
+	if (upperType === "INT" || upperType === "INTEGER" || upperType === "NUMBER") {
 		const parsed = parseInt(value, 10);
 		return Number.isNaN(parsed) ? null : parsed;
 	}
-	return value;
+	return String(value);
 }
 
 export async function executeShopifyQL(query: string, ctx: ExecutionContext): Promise<ShopifyQLResult> {
@@ -55,13 +59,23 @@ export async function executeShopifyQL(query: string, ctx: ExecutionContext): Pr
 		}),
 	);
 
-	const rows: Record<string, string | number | null>[] = (tableData.rows ?? []).map((row: (string | null)[]) => {
-		const record: Record<string, string | number | null> = {};
-		for (let i = 0; i < columns.length; i++) {
-			record[columns[i].name] = coerceValue(row[i] ?? null, columns[i].dataType);
-		}
-		return record;
-	});
+	const rows: Record<string, string | number | null>[] = (tableData.rows ?? []).map(
+		(row: Record<string, string | null> | (string | null)[]) => {
+			const record: Record<string, string | number | null> = {};
+			if (Array.isArray(row)) {
+				// Array format: zip with columns by index
+				for (let i = 0; i < columns.length; i++) {
+					record[columns[i].name] = coerceValue(row[i] ?? null, columns[i].dataType);
+				}
+			} else {
+				// Object format: rows are already keyed by column name
+				for (const col of columns) {
+					record[col.name] = coerceValue(row[col.name] ?? null, col.dataType);
+				}
+			}
+			return record;
+		},
+	);
 
 	return { data: rows, columns };
 }

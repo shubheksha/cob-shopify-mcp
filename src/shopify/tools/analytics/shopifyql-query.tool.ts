@@ -6,8 +6,8 @@ import { z } from "zod";
 export default defineTool({
 	name: "shopifyql_query",
 	domain: "analytics",
-	tier: 2,
-	description: "Execute a raw ShopifyQL query (disabled by default, enable in config)",
+	tier: 1,
+	description: "Execute any ShopifyQL query for custom analytics and reporting",
 	scopes: ["read_reports"],
 	input: {
 		query: z

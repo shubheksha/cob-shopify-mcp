@@ -24,12 +24,16 @@ export default defineTool({
 		const result = await executeShopifyQL(query, ctx);
 		const row = result.data[0] ?? {};
 
+		const totalSales = (row.total_sales as number) ?? 0;
+		const orderCount = (row.orders as number) ?? 0;
+		const avgOV = (row.average_order_value as number) ?? 0;
+
 		return {
-			totalSales: (row.total_sales as number) ?? 0,
-			orderCount: (row.orders as number) ?? 0,
-			averageOrderValue: (row.average_order_value as number) ?? 0,
-			netSales: (row.net_sales as number) ?? 0,
-			grossSales: (row.gross_sales as number) ?? 0,
+			totalSales: Math.round(totalSales * 100) / 100,
+			orderCount,
+			averageOrderValue: Math.round(avgOV * 100) / 100,
+			netSales: Math.round(((row.net_sales as number) ?? 0) * 100) / 100,
+			grossSales: Math.round(((row.gross_sales as number) ?? 0) * 100) / 100,
 		};
 	},
 });

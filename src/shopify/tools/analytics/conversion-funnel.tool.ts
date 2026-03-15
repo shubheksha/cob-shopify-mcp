@@ -8,7 +8,7 @@ export default defineTool({
 	domain: "analytics",
 	tier: 1,
 	description:
-		"Conversion funnel metrics: view sessions, cart, checkout, purchase sessions from product analytics, plus total orders from sales",
+		"Conversion funnel metrics: sessions, orders, and derived conversion rate (values in shop currency)",
 	scopes: ["read_reports"],
 	input: {
 		start_date: z
@@ -21,34 +21,27 @@ export default defineTool({
 			.describe("ISO 8601 date, e.g. 2026-01-31"),
 	},
 	handler: async (input: { start_date: string; end_date: string }, ctx: ExecutionContext) => {
-		const [salesResult, productsResult] = await Promise.all([
-			executeShopifyQL(`FROM sales SHOW orders SINCE ${input.start_date} UNTIL ${input.end_date}`, ctx),
-			executeShopifyQL(
-				`FROM products SHOW view_sessions, cart_sessions, checkout_sessions, purchase_sessions SINCE ${input.start_date} UNTIL ${input.end_date}`,
-				ctx,
-			),
+		const [salesResult, sessionsResult] = await Promise.all([
+			executeShopifyQL(`FROM sales SHOW orders, total_sales, customers SINCE ${input.start_date} UNTIL ${input.end_date}`, ctx),
+			executeShopifyQL(`FROM sessions SHOW sessions SINCE ${input.start_date} UNTIL ${input.end_date}`, ctx),
 		]);
 
-		const orders = (salesResult.data[0]?.orders as number) ?? 0;
-		const productRow = productsResult.data[0] ?? {};
-		const viewSessions = (productRow.view_sessions as number) ?? 0;
-		const cartSessions = (productRow.cart_sessions as number) ?? 0;
-		const checkoutSessions = (productRow.checkout_sessions as number) ?? 0;
-		const purchaseSessions = (productRow.purchase_sessions as number) ?? 0;
+		const salesRow = salesResult.data[0] ?? {};
+		const orders = (salesRow.orders as number) ?? 0;
+		const totalSales = (salesRow.total_sales as number) ?? 0;
+		const customers = (salesRow.customers as number) ?? 0;
+		const sessions = (sessionsResult.data[0]?.sessions as number) ?? 0;
 
-		const conversionRate = viewSessions > 0 ? Math.round((purchaseSessions / viewSessions) * 10000) / 100 : 0;
-		const cartRate = viewSessions > 0 ? Math.round((cartSessions / viewSessions) * 10000) / 100 : 0;
-		const checkoutRate = cartSessions > 0 ? Math.round((checkoutSessions / cartSessions) * 10000) / 100 : 0;
+		const conversionRate = sessions > 0 ? Math.round((orders / sessions) * 10000) / 100 : 0;
+		const averageOrderValue = orders > 0 ? Math.round((totalSales / orders) * 100) / 100 : 0;
 
 		return {
-			viewSessions,
-			cartSessions,
-			checkoutSessions,
-			purchaseSessions,
+			sessions,
 			orders,
+			customers,
+			totalSales,
 			conversionRate,
-			cartRate,
-			checkoutRate,
+			averageOrderValue,
 		};
 	},
 });

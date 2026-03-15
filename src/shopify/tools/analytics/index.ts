@@ -12,3 +12,4 @@ export { default as salesByGeography } from "./sales-by-geography.tool.js";
 export { default as salesComparison } from "./sales-comparison.tool.js";
 export { default as salesSummary } from "./sales-summary.tool.js";
 export { default as topProducts } from "./top-products.tool.js";
+export { default as trafficAnalytics } from "./traffic-analytics.tool.js";

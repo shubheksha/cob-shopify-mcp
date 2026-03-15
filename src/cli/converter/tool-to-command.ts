@@ -98,6 +98,18 @@ function addSingleOption(cmd: Command, key: string, schema: ZodType): void {
 		return;
 	}
 
+	if (typeName === "ZodArray") {
+		const desc = description || "Comma-separated list or JSON array";
+		cmd.option(`${flag} <values>`, desc);
+		return;
+	}
+
+	if (typeName === "ZodObject") {
+		const desc = description || "JSON object";
+		cmd.option(`${flag} <json>`, desc);
+		return;
+	}
+
 	// ZodString and fallback
 	cmd.option(`${flag} <value>`, description);
 }
@@ -128,6 +140,24 @@ export function coerceValue(value: unknown, schema: ZodType): unknown {
 	if (typeName === "ZodBoolean") {
 		if (typeof value === "boolean") return value;
 		return value === "true";
+	}
+
+	if (typeName === "ZodArray") {
+		if (Array.isArray(value)) return value;
+		const str = String(value).trim();
+		if (str.startsWith("[")) {
+			try {
+				return JSON.parse(str);
+			} catch {
+				// fall through to comma split
+			}
+		}
+		return str.split(",").map((s: string) => s.trim()).filter(Boolean);
+	}
+
+	if (typeName === "ZodObject") {
+		if (typeof value === "object" && value !== null) return value;
+		return JSON.parse(String(value));
 	}
 
 	// ZodString, ZodEnum, and fallback — pass through

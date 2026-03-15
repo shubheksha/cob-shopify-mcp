@@ -42,7 +42,7 @@ export const createDraftOrder = defineTool({
 			draftInput.customerId = input.customer_id;
 		}
 		if (input.note) {
-			draftInput.note2 = input.note;
+			draftInput.note = input.note;
 		}
 		if (input.shipping_address) {
 			draftInput.shippingAddress = input.shipping_address;

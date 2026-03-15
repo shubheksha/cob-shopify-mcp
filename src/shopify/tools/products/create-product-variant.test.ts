@@ -49,7 +49,7 @@ describe("create_product_variant", () => {
 			variants: [
 				{
 					price: "39.99",
-					sku: "H-LG",
+					inventoryItem: { sku: "H-LG" },
 					optionValues: [{ name: "Large" }],
 				},
 			],

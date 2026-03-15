@@ -7,7 +7,8 @@ export const createProductVariant = defineTool({
 	name: "create_product_variant",
 	domain: "products",
 	tier: 1,
-	description: "Add a variant to an existing product with price, SKU, and options.",
+	description:
+		'Add a variant to an existing product with price, SKU, and options. Options format: "OptionName:Value" (e.g. "Size:Large,Color:Red").',
 	scopes: ["write_products"],
 	input: {
 		product_id: z.string(),
@@ -27,8 +28,15 @@ export const createProductVariant = defineTool({
 		const variantInput: Record<string, unknown> = {
 			price: input.price,
 		};
-		if (input.sku !== undefined) variantInput.sku = input.sku;
-		if (input.options !== undefined) variantInput.optionValues = input.options.map((v) => ({ name: v }));
+		if (input.sku !== undefined) variantInput.inventoryItem = { sku: input.sku };
+		if (input.options !== undefined)
+			variantInput.optionValues = input.options.map((v) => {
+				const colonIdx = v.indexOf(":");
+				if (colonIdx > 0) {
+					return { optionName: v.slice(0, colonIdx), name: v.slice(colonIdx + 1) };
+				}
+				return { name: v };
+			});
 
 		const result = await ctx.shopify.query(mutation, {
 			productId: input.product_id,

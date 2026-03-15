@@ -44,6 +44,20 @@ mutation CreateDraftOrder($input: DraftOrderInput!) {
         }
       }
       note2
+      shippingAddress {
+        address1
+        city
+        province
+        zip
+        country
+      }
+      billingAddress {
+        address1
+        city
+        province
+        zip
+        country
+      }
     }
     userErrors {
       field

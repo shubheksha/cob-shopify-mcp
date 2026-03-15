@@ -129,5 +129,13 @@ function convertToJsonSchema(schema: ZodType): JsonSchemaField {
 		return { type: "string", enum: [...def.values], required: true };
 	}
 
+	if (typeName === "ZodArray") {
+		return { type: "array", required: true };
+	}
+
+	if (typeName === "ZodObject") {
+		return { type: "object", required: true };
+	}
+
 	return { type: "string", required: true };
 }

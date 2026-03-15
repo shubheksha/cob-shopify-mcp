@@ -62,7 +62,7 @@ describe("create_draft_order", () => {
 		expect(queryFn).toHaveBeenCalledWith(expect.any(String), {
 			input: {
 				lineItems: [{ variantId: "gid://shopify/ProductVariant/1", quantity: 2 }],
-				note2: "Rush order",
+				note: "Rush order",
 			},
 		});
 	});

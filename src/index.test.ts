@@ -4,6 +4,6 @@ describe("cob-shopify-mcp scaffold", () => {
 	it("exports package entry point", async () => {
 		const mod = await import("./index.js");
 		expect(mod).toBeDefined();
-		expect(mod.VERSION).toBe("0.1.0");
+		expect(mod.VERSION).toBe("0.6.0");
 	});
 });

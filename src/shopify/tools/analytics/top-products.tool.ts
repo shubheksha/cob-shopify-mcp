@@ -19,8 +19,8 @@ export default defineTool({
 		input: { start_date: string; end_date: string; sort_by: string; limit: number },
 		ctx: ExecutionContext,
 	) => {
-		const sortColumn = input.sort_by === "quantity" ? "units_sold" : "total_sales";
-		const query = `FROM sales SHOW total_sales, units_sold, orders GROUP BY product_title SINCE ${input.start_date} UNTIL ${input.end_date} ORDER BY ${sortColumn} DESC LIMIT ${input.limit}`;
+		const sortColumn = input.sort_by === "quantity" ? "orders" : "total_sales";
+		const query = `FROM sales SHOW total_sales, orders, net_sales GROUP BY product_title SINCE ${input.start_date} UNTIL ${input.end_date} ORDER BY ${sortColumn} DESC LIMIT ${input.limit}`;
 
 		const result = await executeShopifyQL(query, ctx);
 
@@ -28,7 +28,7 @@ export default defineTool({
 			productId: null,
 			productTitle: row.product_title as string,
 			totalRevenue: typeof row.total_sales === "number" ? Math.round(row.total_sales * 100) / 100 : 0,
-			totalQuantity: typeof row.units_sold === "number" ? row.units_sold : 0,
+			totalQuantity: typeof row.orders === "number" ? row.orders : 0,
 			orderCount: typeof row.orders === "number" ? row.orders : 0,
 		}));
 

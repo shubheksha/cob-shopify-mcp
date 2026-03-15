@@ -8,13 +8,6 @@ query ShopifyQLQuery($query: String!) {
       }
       rows
     }
-    parseErrors {
-      code
-      message
-      range {
-        start { line character }
-        end { line character }
-      }
-    }
+    parseErrors
   }
 }

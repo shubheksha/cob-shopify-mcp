@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const sortColumnMap: Record<string, string> = {
 	revenue: "total_sales",
-	quantity: "units_sold",
+	quantity: "orders",
 	orders: "orders",
 };
 
@@ -13,7 +13,7 @@ export default defineTool({
 	name: "product_vendor_performance",
 	domain: "analytics",
 	tier: 1,
-	description: "Revenue, units sold, and orders broken down by product vendor",
+	description: "Revenue and orders broken down by product vendor",
 	scopes: ["read_reports"],
 	input: {
 		start_date: z.string().describe("ISO 8601 date, e.g. 2026-01-01"),
@@ -29,12 +29,12 @@ export default defineTool({
 		ctx: ExecutionContext,
 	) => {
 		const sortColumn = sortColumnMap[input.sort_by] ?? "total_sales";
-		const query = `FROM sales SHOW total_sales, units_sold, orders GROUP BY product_vendor SINCE ${input.start_date} UNTIL ${input.end_date} ORDER BY ${sortColumn} DESC LIMIT ${input.limit}`;
+		const query = `FROM sales SHOW total_sales, net_sales, orders GROUP BY product_vendor SINCE ${input.start_date} UNTIL ${input.end_date} ORDER BY ${sortColumn} DESC LIMIT ${input.limit}`;
 		const result = await executeShopifyQL(query, ctx);
 		const vendors = result.data.map((row) => ({
 			vendor: (row.product_vendor as string) ?? "Unknown",
 			totalSales: (row.total_sales as number) ?? 0,
-			unitsSold: (row.units_sold as number) ?? 0,
+			netSales: (row.net_sales as number) ?? 0,
 			orders: (row.orders as number) ?? 0,
 		}));
 		return { vendors, count: vendors.length };

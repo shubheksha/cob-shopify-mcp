@@ -36,11 +36,9 @@ export async function executeShopifyQL(query: string, ctx: ExecutionContext): Pr
 		throw new Error(`ShopifyQL query failed: no response data. Query: ${query}`);
 	}
 
-	// Check for parse errors
+	// Check for parse errors (parseErrors is string[] in Shopify's API)
 	if (result.parseErrors && Array.isArray(result.parseErrors) && result.parseErrors.length > 0) {
-		const errorMessages = result.parseErrors
-			.map((e: { code?: string; message?: string }) => `[${e.code ?? "UNKNOWN"}] ${e.message ?? "Unknown error"}`)
-			.join("; ");
+		const errorMessages = result.parseErrors.join("; ");
 		throw new Error(`ShopifyQL parse error: ${errorMessages}. Query: ${query}`);
 	}
 

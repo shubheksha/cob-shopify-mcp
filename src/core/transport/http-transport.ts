@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -32,7 +31,7 @@ export class HttpTransport implements TransportInstance {
 
 	async start(server: McpServer): Promise<void> {
 		this.transport = new StreamableHTTPServerTransport({
-			sessionIdGenerator: () => crypto.randomUUID(),
+			sessionIdGenerator: undefined,
 		});
 
 		this.httpServer = createServer(async (req, res) => {

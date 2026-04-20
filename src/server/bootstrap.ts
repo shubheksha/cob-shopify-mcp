@@ -109,33 +109,36 @@ export async function bootstrap(overrides?: DeepPartial<CobConfig>): Promise<voi
 		}
 	}
 
-	// 11. Create McpServer
-	const server = new McpServer({
-		name: "cob-shopify-mcp",
-		version: "1.0.0",
-	});
-
-	// 12. Register tools, resources, prompts
-	if (config.tools.advertise_and_activate) {
-		registerAdvertiser(server, registry, toolEngine, config, ctx);
-	} else {
-		registerTools(server, registry, toolEngine, config, ctx);
-	}
-
+	// 11. Create server factory (each session gets its own McpServer)
 	const allResources = getAllResources();
-	registerResources(server, allResources, ctx);
-
 	const allPrompts = getAllPrompts();
-	registerPrompts(server, allPrompts);
 
-	// 13. Create and start transport
+	const createServer = (): McpServer => {
+		const server = new McpServer({
+			name: "cob-shopify-mcp",
+			version: "1.0.0",
+		});
+
+		if (config.tools.advertise_and_activate) {
+			registerAdvertiser(server, registry, toolEngine, config, ctx);
+		} else {
+			registerTools(server, registry, toolEngine, config, ctx);
+		}
+
+		registerResources(server, allResources, ctx);
+		registerPrompts(server, allPrompts);
+
+		return server;
+	};
+
+	// 12. Create and start transport
 	const transport = createTransport({
 		type: config.transport.type,
 		httpPort: config.transport.port,
 		httpHost: config.transport.host,
 	});
 	try {
-		await transport.start(server);
+		await transport.start(createServer);
 	} catch (error) {
 		throw new Error(`Failed to start transport: ${error instanceof Error ? error.message : String(error)}`);
 	}

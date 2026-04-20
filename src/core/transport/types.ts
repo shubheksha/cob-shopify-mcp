@@ -9,6 +9,6 @@ export interface TransportConfig {
 }
 
 export interface TransportInstance {
-	start(server: McpServer): Promise<void>;
+	start(server: McpServer | (() => McpServer)): Promise<void>;
 	stop(): Promise<void>;
 }
